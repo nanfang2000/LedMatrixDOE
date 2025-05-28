@@ -1,0 +1,135 @@
+.pio_version 0 // only requires PIO version 0
+
+.program mbi
+.side_set 1
+
+; This is really just a TX-only SPI. CLK is side-set pin 0, DIN is OUT pin 0.
+; Autopull enabled, threshold 16.
+;
+; Every word (16 bits) written to the FIFO will be shifted out in its entirety, MSB-first.
+    ; pull ifempty side 0
+    out x, 12   side 0; Get data length
+    out y, 4  side 0 ;Get LE width
+    ; pull ifempty side 0
+bitloop:
+    out pins, 1   side 0   ; Stall here when no data (still asserts clock low)
+    jmp x-- bitloop side 1       ; loop for 16 times
+    set pins, 1   side 0   ; LE high
+le_loop:
+    out pins, 1   side 0
+    jmp y-- le_loop   side 1     ; loop for LE
+    set pins, 0   side 0   ; LE Low
+; public entry_point:
+    ; set x, 16   side 0; Get data length and command
+; clr_fifo:
+;     out pins, 1   side 0
+;     jmp !osre clr_fifo  side 0x0     ; Fall-through if TXF empties
+
+% c-sdk {
+#include "hardware/gpio.h"
+#include "hardware/clocks.h"
+static inline void pio_mbi_program_init(PIO pio, uint sm, uint offset,
+        uint baud, uint pin_dclk, uint pin_sdi, uint pin_le) {
+    pio_sm_set_pins_with_mask(pio, sm, 0, (1u << pin_dclk) | (1u << pin_sdi) | (1u << pin_le));
+    pio_sm_set_pindirs_with_mask(pio, sm, ~0u, (1u << pin_dclk) | (1u << pin_sdi) | (1u << pin_le));
+    pio_gpio_init(pio, pin_dclk);
+    pio_gpio_init(pio, pin_sdi);
+    pio_gpio_init(pio, pin_le);
+
+    pio_sm_config c = mbi_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, pin_sdi, 1);
+    sm_config_set_sideset_pins(&c, pin_dclk);
+    sm_config_set_set_pins(&c, pin_le, 1);
+    // Shift to right, autopull with threshold 16
+    sm_config_set_out_shift(&c, false, true, 16);
+    // Deeper FIFO as we're not doing any RX
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    // We transmit 1 bit every 2 execution cycles
+    float div = (float)clock_get_hz(clk_sys) / (2 * baud);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+%}
+
+.program mbi_graph
+.side_set 1
+    pull ifempty side 0
+    out x, 16   side 0; Get clk count
+    out pins, 16   side 0; initial line
+    mov y, x            side 0
+.wrap_target
+lineloop:
+    nop      side 0          ; 
+    jmp y-- lineloop    side 1          ; loop for 512 times
+clk_513: 
+    irq 0 rel           side 1
+    out pins 16         side 1
+    mov y, x            side 1   [5]   ; 513th clk
+    nop                 side 0   [5]    ; 513th clk  
+    out pins 16         side 0          ; 513th clk  
+.wrap
+
+
+% c-sdk {
+#include "hardware/gpio.h"
+#include "hardware/clocks.h"
+#include "hardware/irq.h"
+#include <stdio.h>
+static uint32_t glck_count = 1;
+static void mbi_isr_handler(void) {
+    // 自定义处理逻辑（例如读取FIFO数据）
+    //irq_clear(PIO0_IRQ_0);
+    uint8_t irq_flags = pio0_hw->irq;
+    //printf("mbi_isr_handler %u\n", (1 << ((count)%4)));
+    hw_clear_bits(&pio0_hw->irq, irq_flags);
+    //pio_interrupt_clear (pio0, 2 );
+    pio_sm_put(pio0, 2, ( 0xFFFF << 16) | 0);
+    pio_sm_put(pio0, 2, ( (~(1 << ((glck_count++)%16))) << 16) | 0);
+}
+static inline void pio_mbi_graph_program_init(PIO pio, uint sm, uint offset,
+        uint freq, uint pin_gclk, uint pin_lines) {
+    pio_sm_set_pins_with_mask(pio, sm, 0, (1 << pin_gclk));
+    pio_sm_set_pins_with_mask(pio, sm, 0xFFFF << pin_lines, (0xFFFFu << pin_lines));
+    pio_sm_set_pindirs_with_mask(pio, sm, ~0u, (0xFFFFu << pin_lines) | (1u << pin_gclk));
+    irq_set_exclusive_handler(PIO0_IRQ_0, mbi_isr_handler);
+    pio_set_irq0_source_enabled(pio, (pis_interrupt0 + sm), true); 
+    // Make sure the interrupt starts cleared. It should already be cleared, so this should
+    // basically be a no-op. I call it defensive programming.
+    pio_interrupt_clear(pio, sm);
+    irq_set_enabled(PIO0_IRQ_0, true);
+    for(uint i = 0; i < 16; i++) {
+        pio_gpio_init(pio, pin_lines + i);
+    }
+    pio_gpio_init(pio, pin_gclk);
+
+    pio_sm_config c = mbi_graph_program_get_default_config(offset);
+    sm_config_set_out_pins(&c, pin_lines, 16);
+    sm_config_set_sideset_pins(&c, pin_gclk);
+    ; sm_config_set_set_pins(&c, pin_lines, 1);
+    pio_sm_set_pins_with_mask(pio, sm, 0 << pin_lines, (0xFFFFu << pin_lines));
+    // Shift to right, autopull with threshold 16
+    sm_config_set_out_shift(&c, false, true, 16);
+    // Deeper FIFO as we're not doing any RX
+    sm_config_set_fifo_join(&c, PIO_FIFO_JOIN_TX);
+    // We transmit 1 bit every 2 execution cycles
+    float div = (float)clock_get_hz(clk_sys) / (2 * freq);
+    sm_config_set_clkdiv(&c, div);
+
+    pio_sm_init(pio, sm, offset, &c);
+    pio_sm_set_enabled(pio, sm, true);
+}
+
+static void restart_glck(PIO pio, uint sm, uint offset,
+        uint freq, uint pin_gclk, uint pin_lines){
+    pio_sm_set_enabled(pio, sm, false);  // 停止状态机
+    pio_interrupt_clear(pio, sm);
+    irq_set_enabled(PIO0_IRQ_0, false);
+    pio_sm_restart(pio, sm);             // 复位寄存器和FIFO
+    pio_sm_clear_fifos(pio, sm);         // 手动清空FIFO缓冲区
+    glck_count = 1;
+    pio_mbi_graph_program_init(pio, sm, offset, freq, pin_gclk, pin_lines); 
+}
+
+%}
