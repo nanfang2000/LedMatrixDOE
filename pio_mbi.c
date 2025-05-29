@@ -68,7 +68,7 @@ void pio_mbi_graphic_init(pio_mbi_inst_t *mbi, uint freq, uint pin_gclk, uint pi
 
     pio_mbi_graph_program_init(mbi->pio, mbi->sm, mbi->offset, freq, pin_gclk, pin_lines);
     pio_sm_put_blocking(mbi->pio, mbi->sm, (512 << 16) | 0);
-    pio_sm_put_blocking(mbi->pio, mbi->sm, (0xFFFF<< 16) | 0);
+    // pio_sm_put_blocking(mbi->pio, mbi->sm, (0xFFFE<< 16) | 0);
 }
 
 void pio_mbi_graphic_restart(pio_mbi_inst_t *mbi) {
@@ -85,5 +85,5 @@ void pio_mbi_graphic_restart(pio_mbi_inst_t *mbi) {
     restart_glck(mbi->pio, mbi->sm, mbi->offset, 16000000, 22, 0);
 
     pio_sm_put_blocking(mbi->pio, mbi->sm, (512 << 16) | 0);
-    pio_sm_put_blocking(mbi->pio, mbi->sm, (0xFFF< 16) | 0);
+    // pio_sm_put_blocking(mbi->pio, mbi->sm, (0xFFFE< 16) | 0);
 }

@@ -55,21 +55,44 @@ static inline void pio_mbi_program_init(PIO pio, uint sm, uint offset,
 
 .program mbi_graph
 .side_set 1
-    pull ifempty side 0
-    out x, 16   side 0; Get clk count
-    out pins, 16   side 0; initial line
-    mov y, x            side 0
+    pull ifempty        side 0
+    out x, 16           side 0          ; Get loop count for a line
+init:
+    set y, 1            side 0
+    mov osr, y          side 0          ; osr is 1
 .wrap_target
+start:
+    mov y, x            side 0
+    mov pins !osr       side 0          ; out pins to 0xFFFE for first time (line0)
 lineloop:
-    nop      side 0          ; 
+    nop                 side 0          ; 
     jmp y-- lineloop    side 1          ; loop for 512 times
 clk_513: 
-    irq 0 rel           side 1
-    out pins 16         side 1
-    mov y, x            side 1   [5]   ; 513th clk
-    nop                 side 0   [5]    ; 513th clk  
-    out pins 16         side 0          ; 513th clk  
+    ; set y 0             side 1
+    ; mov pins !y         side 1
+    out NULL, 1         side 1   [5]    ; 513th clk
+    jmp !osre start     side 0   [5]    ; if osr is not empty, goto next line's loop
+    jmp init            side 0          ; if osr is empty, goto init to re-initiate osr and pins
 .wrap
+
+; .side_set 1
+;     pull ifempty side 0
+;     out x, 16   side 0; Get clk count
+;     ; out pins, 16   side 0; initial line
+;     set y, 1            side 0
+;     mov pins !y          side 0
+;     mov y, x            side 0
+; .wrap_target
+; lineloop:
+;     nop      side 0          ; 
+;     jmp y-- lineloop    side 1          ; loop for 512 times
+; clk_513: 
+;     irq 0 rel           side 1
+;     out pins 16         side 1
+;     mov y, x            side 1   [5]   ; 513th clk
+;     nop                 side 0   [5]    ; 513th clk  
+;     out pins 16         side 0          ; 513th clk  
+; .wrap
 
 
 % c-sdk {
