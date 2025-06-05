@@ -101,7 +101,7 @@ int32_t mbi5252_init(uint32_t chips, uint32_t scan_lines, uint32_t channels) {
     pio_mbi_write_config1(&g_context.pio_mbi, configures, 6); //16 lines
     // pio_mbi_soft_reset(&g_context.pio_mbi);
 
-    pio_mbi_graphic_init(&g_context.pio_mbi_graphic, 1600000, PIN_GCLK, PIN_LINE0);
+    pio_mbi_graphic_init(&g_context.pio_mbi_graphic, 16000000, PIN_GCLK, PIN_LINE0);
 
 }
 
