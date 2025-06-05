@@ -63,7 +63,7 @@ init:
 .wrap_target
 start:
     mov y, x            side 0
-    mov pins !osr       side 0          ; out pins to 0xFFFE for first time (line0)
+    mov pins !osr       side 0   [3]    ; out pins to 0xFFFE for first time (line0)
 lineloop:
     nop                 side 0          ; 
     jmp y-- lineloop    side 1          ; loop for 512 times
@@ -71,7 +71,7 @@ clk_513:
     ; set y 0             side 1
     ; mov pins !y         side 1
     out NULL, 1         side 1   [5]    ; 513th clk
-    jmp !osre start     side 0   [5]    ; if osr is not empty, goto next line's loop
+    jmp !osre start     side 0   [9]    ; if osr is not empty, goto next line's loop
     jmp init            side 0          ; if osr is empty, goto init to re-initiate osr and pins
 .wrap
 

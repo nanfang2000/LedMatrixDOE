@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(LedMatrixDOE main.c mbi5252.c pio_mbi.c)
+add_executable(LedMatrixDOE main.c mbi5252.c pio_mbi.c gfx_driver.c)
 
 pico_set_program_name(LedMatrixDOE "LedMatrixDOE")
 pico_set_program_version(LedMatrixDOE "0.1")
