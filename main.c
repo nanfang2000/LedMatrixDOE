@@ -8,6 +8,8 @@
 #include "hardware/pwm.h"
 #include "mbi5252.h"
 #include "gfx_driver.h"
+#include "gfx_wave.h"
+#include "gfx_fireflies.h"
 
 // SPI Defines
 // We are going to use SPI 0, and allocate it to the following GPIO pins
@@ -88,6 +90,39 @@ void enable_pio_irqs() {
     irq_set_enabled(PIO0_IRQ_0, true);
 }
 
+void gfx_test(void)
+{
+    rgb_t black = {0, 0, 0};
+    rgb_t red = {128, 0, 0};
+    rgb_t green = {0, 128, 0};
+    rgb_t blue = {0, 0, 128};
+
+    int w = 1;
+    int h = 1;
+    int idx = 0;
+    rgb_t frame_color_list[] = {red, green, blue};
+    while (true)
+    {
+        printf("Hello, world!\n");
+        sleep_ms(100);
+        gfx_fill(0, 0, w, h, frame_color_list[idx % 3]);
+        gfx_sync_frame();
+        // gfx_clear();
+        // gfx_fill(0, 0, w, h, black);
+        w += 2;
+        h++;
+        if (w == 33)
+        {
+            idx++;
+            w = 1;
+        }
+        if (h == 17)
+        {
+            h = 1;
+        }
+    }
+}
+
 int main()
 {
     stdio_init_all();
@@ -143,33 +178,9 @@ int main()
     // For more examples of UART use see https://github.com/raspberrypi/pico-examples/tree/master/uart
 
     gfx_init();
-    rgb_t black = {0, 0, 0};
-    rgb_t red = {128, 0, 0};
-    rgb_t green = {0, 128, 0};
-    rgb_t blue = {0, 0, 128};
-    // gfx_fill(8, 4, 16, 8, green);
-    // gfx_draw_pixel(0, 0, red);
-    // gfx_sync_frame();
 
-    int w = 1;
-    int h = 1;
-    int idx = 0;
-    rgb_t frame_color_list[] = {red, green, blue};
-    while (true) {
-        printf("Hello, world!\n");
-        sleep_ms(100);
-        gfx_fill(0, 0, w, h, frame_color_list[idx%3]);
-        gfx_sync_frame();
-        // gfx_clear();
-        // gfx_fill(0, 0, w, h, black);
-        w+=2;
-        h++;
-        if( w == 33) {
-            idx++;
-            w = 1;
-        }
-        if (h == 17) {
-            h = 1;
-        }
-    }
+    // gfx_test();
+    // gfx_wave_effect();
+    gfx_firefly_effect();
 }
+

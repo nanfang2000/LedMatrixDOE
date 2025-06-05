@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(LedMatrixDOE main.c mbi5252.c pio_mbi.c gfx_driver.c)
+add_executable(LedMatrixDOE main.c mbi5252.c pio_mbi.c gfx_driver.c gfx_wave.c gfx_fireflies.c)
 
 pico_set_program_name(LedMatrixDOE "LedMatrixDOE")
 pico_set_program_version(LedMatrixDOE "0.1")
@@ -43,7 +43,6 @@ pico_set_program_version(LedMatrixDOE "0.1")
 # Generate PIO header
 pico_generate_pio_header(LedMatrixDOE ${CMAKE_CURRENT_LIST_DIR}/blink.pio)
 pico_generate_pio_header(LedMatrixDOE ${CMAKE_CURRENT_LIST_DIR}/mbi.pio)
-pico_generate_pio_header(LedMatrixDOE ${CMAKE_CURRENT_LIST_DIR}/simple_irq.pio)
 
 # Modify the below lines to enable/disable output over UART/USB
 pico_enable_stdio_uart(LedMatrixDOE 0)
@@ -56,6 +55,7 @@ target_link_libraries(LedMatrixDOE
 # Add the standard include files to the build
 target_include_directories(LedMatrixDOE PRIVATE
         ${CMAKE_CURRENT_LIST_DIR}
+        ${PICO_SDK_PATH}/src/common/pico_stdlib/include
 )
 
 # Add any user requested libraries
