@@ -98,7 +98,7 @@ int32_t mbi5252_init(uint32_t chips, uint32_t scan_lines, uint32_t channels) {
     pio_mbi_init(&g_context.pio_mbi, 16000000, PIN_DCLK, PIN_SDI, PIN_LE);
     pio_mbi_pre_active(&g_context.pio_mbi);
     uint16_t configures[6] = {0xCF1B, 0xCF1B, 0xCF1B, 0xCF1B, 0xCF1B, 0xCF1B}; //default: 0x32B
-    pio_mbi_write_config1(&g_context.pio_mbi, configures, 6); //16 lines
+    pio_mbi_write_config1(&g_context.pio_mbi, configures, chips); //6 chips
     // pio_mbi_soft_reset(&g_context.pio_mbi);
 
     pio_mbi_graphic_init(&g_context.pio_mbi_graphic, 16000000, PIN_GCLK, PIN_LINE0);

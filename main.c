@@ -109,9 +109,9 @@ void gfx_test(void)
         gfx_sync_frame();
         // gfx_clear();
         // gfx_fill(0, 0, w, h, black);
-        w += 2;
+        w += 1;
         h++;
-        if (w == 33)
+        if (w == 17)
         {
             idx++;
             w = 1;
@@ -179,6 +179,13 @@ int main()
 
     gfx_init();
 
+    // rgb_t blue = {0, 0, 128};
+    // rgb_t green = {0, 128, 0};
+    // rgb_t red = {128, 0, 0};
+    // // gfx_fill(0, 0, 16, 16, blue);
+    // gfx_fill(0, 0, 8, 8, red);
+    // gfx_sync_frame();
+    // while(1);
     // gfx_test();
     // gfx_wave_effect();
     gfx_firefly_effect();

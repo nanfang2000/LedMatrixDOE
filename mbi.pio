@@ -58,21 +58,19 @@ static inline void pio_mbi_program_init(PIO pio, uint sm, uint offset,
     pull ifempty        side 0
     out x, 16           side 0          ; Get loop count for a line
 init:
-    set y, 1            side 0
-    mov osr, y          side 0          ; osr is 1
+    set y, 15           side 0
 .wrap_target
 start:
+    mov osr, y          side 0          ; osr is line selection
+    mov pins osr        side 0   [3]    ; out pins to 0xFFFE for first time (line0)
     mov y, x            side 0
-    mov pins !osr       side 0   [3]    ; out pins to 0xFFFE for first time (line0)
 lineloop:
     nop                 side 0          ; 
     jmp y-- lineloop    side 1          ; loop for 512 times
 clk_513: 
-    ; set y 0             side 1
-    ; mov pins !y         side 1
-    out NULL, 1         side 1   [5]    ; 513th clk
-    jmp !osre start     side 0   [9]    ; if osr is not empty, goto next line's loop
-    jmp init            side 0          ; if osr is empty, goto init to re-initiate osr and pins
+    mov y, osr          side 1   [5]    ; 513th clk
+    jmp y-- start       side 0   [9]    ; if osr is not empty, goto next line's loop
+    jmp init            side 0          ; 
 .wrap
 
 ; .side_set 1
@@ -114,21 +112,21 @@ static void mbi_isr_handler(void) {
 static inline void pio_mbi_graph_program_init(PIO pio, uint sm, uint offset,
         uint freq, uint pin_gclk, uint pin_lines) {
     pio_sm_set_pins_with_mask(pio, sm, 0, (1 << pin_gclk));
-    pio_sm_set_pins_with_mask(pio, sm, 0xFFFF << pin_lines, (0xFFFFu << pin_lines));
-    pio_sm_set_pindirs_with_mask(pio, sm, ~0u, (0xFFFFu << pin_lines) | (1u << pin_gclk));
+    pio_sm_set_pins_with_mask(pio, sm, 0xF << pin_lines, (0xFu << pin_lines));
+    pio_sm_set_pindirs_with_mask(pio, sm, ~0u, (0xFu << pin_lines) | (1u << pin_gclk));
     irq_set_exclusive_handler(PIO0_IRQ_0, mbi_isr_handler);
     pio_set_irq0_source_enabled(pio, (pis_interrupt0 + sm), true); 
     // Make sure the interrupt starts cleared. It should already be cleared, so this should
     // basically be a no-op. I call it defensive programming.
     pio_interrupt_clear(pio, sm);
     irq_set_enabled(PIO0_IRQ_0, true);
-    for(uint i = 0; i < 16; i++) {
+    for(uint i = 0; i < 4; i++) {
         pio_gpio_init(pio, pin_lines + i);
     }
     pio_gpio_init(pio, pin_gclk);
 
     pio_sm_config c = mbi_graph_program_get_default_config(offset);
-    sm_config_set_out_pins(&c, pin_lines, 16);
+    sm_config_set_out_pins(&c, pin_lines, 4);
     sm_config_set_sideset_pins(&c, pin_gclk);
     ; sm_config_set_set_pins(&c, pin_lines, 1);
     pio_sm_set_pins_with_mask(pio, sm, 0 << pin_lines, (0xFFFFu << pin_lines));

@@ -13,16 +13,16 @@
 typedef struct {
     int width;
     int height;
-    rgb_t buf[16][32];
+    rgb_t buf[16][16];
 }frame_buffer_t;
 
 frame_buffer_t frame_buffer = {0};
 
 void gfx_init(void) {
-    frame_buffer.width = 32;
+    frame_buffer.width = 16;
     frame_buffer.height = 16;
     gfx_clear();
-    mbi5252_init(6, 16, 16);
+    mbi5252_init(3, 16, 16);
 }
 
 void gfx_draw_pixel(int x, int y, rgb_t color) {
@@ -46,19 +46,19 @@ void gfx_sync_frame(void) {
     uint16_t frame[16][16][48];
     memset(frame, 0, sizeof(frame));
     for (int y = 0; y < 16; y++) {
-        for (int x = 0; x < 32; x++) {
+        for (int x = 0; x < 16; x++) {
             int ch = 0;
             int chip = 0;
             rgb_t color = frame_buffer.buf[y][x];
-            chip = 5 - (x * 3 + 0) / 16;
+            chip = 2 - (x * 3 + 0) / 16;
             ch = 15 - (x * 3 + 0) % 16;
-            frame[y][ch][chip] = color.red << 6;
-            chip = 5 - (x * 3 + 1) / 16;
+            frame[y][ch][chip] = color.blue << 6;
+            chip = 2 - (x * 3 + 1) / 16;
             ch = 15 - (x * 3 + 1) % 16;
             frame[y][ch][chip] = color.green << 6;
-            chip = 5 - (x * 3 + 2) / 16;
+            chip = 2 - (x * 3 + 2) / 16;
             ch = 15 - (x * 3 + 2) % 16;
-            frame[y][ch][chip] = color.blue << 6;
+            frame[y][ch][chip] = color.red << 6;
         }
     }
     mbi5252_send_frame(frame, 256);

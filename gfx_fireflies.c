@@ -5,7 +5,7 @@
 #include "hardware/timer.h"
 
 // 萤火虫数量
-#define NUM_FIREFLIES 64
+#define NUM_FIREFLIES 32
 // 信息素挥发率
 #define PHEROMONE_EVAPORATION 0.9
 // 信息素强度
@@ -17,7 +17,7 @@
 #define SEPARATION_WEIGHT 3.0f // 分离权重
 
 // 信息素地图
-float pheromone_map[16][32];
+float pheromone_map[16][16];
 
 // 萤火虫位置结构体
 typedef struct {
@@ -31,7 +31,7 @@ typedef struct {
 // 初始化信息素地图
 static void firefly_init_pheromone_map() {
     for (int y = 0; y < 16; y++) {
-        for (int x = 0; x < 32; x++) {
+        for (int x = 0; x < 16; x++) {
             pheromone_map[y][x] = 0.0;
         }
     }
@@ -40,7 +40,7 @@ static void firefly_init_pheromone_map() {
 // 初始化萤火虫群
 static void firefly_init_fireflies(firefly_t *fireflies) {
     for (int i = 0; i < NUM_FIREFLIES; i++) {
-        fireflies[i].x = rand() % 32;
+        fireflies[i].x = rand() % 16;
         fireflies[i].y = rand() % 16;
         fireflies[i].vx = (rand() % 3) - 1; // -1, 0, 1
         fireflies[i].vy = (rand() % 3) - 1;
@@ -55,7 +55,7 @@ static void firefly_init_fireflies(firefly_t *fireflies) {
 static void firefly_update_pheromone_map(firefly_t *fireflies) {
     // 信息素挥发
     for (int y = 0; y < 16; y++) {
-        for (int x = 0; x < 32; x++) {
+        for (int x = 0; x < 16; x++) {
             pheromone_map[y][x] *= PHEROMONE_EVAPORATION;
         }
     }
@@ -82,7 +82,7 @@ static void firefly_select_next_direction(firefly_t *firefly) {
         int new_x = firefly->x + possible_directions[i][0];
         int new_y = firefly->y + possible_directions[i][1];
         
-        if (new_x >= 0 && new_x < 32 && new_y >= 0 && new_y < 16) {
+        if (new_x >= 0 && new_x < 16 && new_y >= 0 && new_y < 16) {
             probabilities[i] = pheromone_map[new_y][new_x] + 0.1f; // 添加基础概率
             total_pheromone += probabilities[i];
         } else {
@@ -196,8 +196,8 @@ static void firefly_update_fireflies(firefly_t *fireflies) {
             fireflies[i].x = 0;
             fireflies[i].vx = 1;
         }
-        if (fireflies[i].x >= 32) {
-            fireflies[i].x = 31;
+        if (fireflies[i].x >= 16) {
+            fireflies[i].x = 15;
             fireflies[i].vx = -1;
         }
         if (fireflies[i].y < 0) {
