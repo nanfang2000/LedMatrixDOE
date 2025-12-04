@@ -28,11 +28,11 @@ void blink_pin_forever(PIO pio, uint sm, uint offset, uint pin, uint freq) {
     blink_program_init(pio, sm, offset, pin);
     pio_sm_set_enabled(pio, sm, true);
 
-    printf("Blinking pin %d at %d Hz\n", pin, freq);
+    printf("Blinking pin %d at %d Hz\n", pin, freq/1000);
 
     // PIO counter program takes 3 more cycles in total than we pass as
     // input (wait for n + 1; mov; jmp)
-    pio->txf[sm] = (125000000 / (2 * freq)) - 3;
+    pio->txf[sm] = (125000000 / (2 * freq/1000)) - 3;
 }
 
 int64_t alarm_callback(alarm_id_t id, void *user_data) {
@@ -146,11 +146,11 @@ int main()
     
     // enable_pio_irqs();
 
-    #ifdef PICO_DEFAULT_LED_PIN
-    blink_pin_forever(pio, 0, offset, PICO_DEFAULT_LED_PIN, 3);
-    #else
-    blink_pin_forever(pio, 0, offset, 6, 3);
-    #endif
+    // #ifdef PICO_DEFAULT_LED_PIN
+    // blink_pin_forever(pio, 0, offset, PICO_DEFAULT_LED_PIN, 100);
+    // #else
+    // blink_pin_forever(pio, 0, offset, 6, 3);
+    // #endif
     
     // For more pio examples see https://github.com/raspberrypi/pico-examples/tree/master/pio
 

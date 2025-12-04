@@ -38,7 +38,17 @@ void gfx_init(void);
 void gfx_clear(void);
 
 /**
- * @brief Draw a pixel at the specified position.
+ * @brief Draw a pixel at the specified 3D position.
+ * 
+ * @param x The x-coordinate of the pixel.
+ * @param y The y-coordinate of the pixel.
+ * @param z The z-coordinate (depth) of the pixel.
+ * @param color The color of the pixel, represented by the rgb_t structure.
+ */
+void gfx_draw_pixel_3d(int x, int y, int z, rgb_t color);
+
+/**
+ * @brief Draw a pixel at the specified position (2D, uses default z layer).
  * 
  * @param x The x-coordinate of the pixel.
  * @param y The y-coordinate of the pixel.
@@ -47,7 +57,20 @@ void gfx_clear(void);
 void gfx_draw_pixel(int x, int y, rgb_t color);
 
 /**
- * @brief Fill a specified area with a color.
+ * @brief Fill a specified 3D area with a color.
+ * 
+ * @param x0 The x-coordinate of the top-left corner of the filling area.
+ * @param y0 The y-coordinate of the top-left corner of the filling area.
+ * @param z0 The z-coordinate (depth) of the starting layer.
+ * @param w The width of the filling area.
+ * @param h The height of the filling area.
+ * @param d The depth of the filling area.
+ * @param color The filling color, represented by the rgb_t structure.
+ */
+void gfx_fill_3d(int x0, int y0, int z0, int w, int h, int d, rgb_t color);
+
+/**
+ * @brief Fill a specified area with a color (2D, fills all z layers).
  * 
  * @param x0 The x-coordinate of the top-left corner of the filling area.
  * @param y0 The y-coordinate of the top-left corner of the filling area.
