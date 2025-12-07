@@ -10,6 +10,8 @@
 #include "gfx_driver.h"
 #include "gfx_wave.h"
 #include "gfx_fireflies.h"
+#include "gfx_images.h"
+#include "gfx_image.h"
 
 // SPI Defines
 // We are going to use SPI 0, and allocate it to the following GPIO pins
@@ -188,6 +190,36 @@ int main()
     // while(1);
     // gfx_test();
     // gfx_wave_effect();
-    gfx_firefly_effect();
+    // gfx_firefly_effect();
+    // gfx_draw_image_3d(0, 0, 15, &image_chrome);
+    
+    // 示例1: 无旋转显示
+    // gfx_draw_voxel_array(8, 8, 8, &voxel_head);
+    gfx_draw_voxel_array_rotated(8, 8, 8, -90, 180, 0, &voxel_head);
+    gfx_sync_frame();
+    while(1);
+    
+    // 示例2: 绕Y轴旋转显示（自动旋转动画）
+    int angle = 0;
+    while(1) {
+        gfx_clear();
+        
+        // 绕Y轴旋转（水平旋转）
+        gfx_draw_voxel_array_rotated(8, 8, 8, -90, 180, angle, &voxel_head);
+        
+        // 或者绕X轴旋转（前后翻转）
+        // gfx_draw_voxel_array_rotated(8, 8, 8, angle, 0, 0, &voxel_head);
+        
+        // 或者绕Z轴旋转（左右翻转）
+        // gfx_draw_voxel_array_rotated(8, 8, 8, 0, 0, angle, &voxel_head);
+        
+        // 或者组合旋转
+        // gfx_draw_voxel_array_rotated(8, 8, 8, angle, angle, 0, &voxel_head);
+        
+        gfx_sync_frame();
+        
+        angle = (angle + 5) % 360;  // 每次旋转5度
+        sleep_ms(50);  // 延迟50ms，控制旋转速度
+    }
 }
 

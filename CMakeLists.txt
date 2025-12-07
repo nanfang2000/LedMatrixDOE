@@ -35,7 +35,7 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(LedMatrixDOE main.c mbi5252.c pio_mbi.c gfx_driver.c gfx_wave.c gfx_fireflies.c)
+add_executable(LedMatrixDOE main.c mbi5252.c pio_mbi.c gfx_driver.c gfx_wave.c gfx_fireflies.c gfx_images.c gfx_image.c)
 
 pico_set_program_name(LedMatrixDOE "LedMatrixDOE")
 pico_set_program_version(LedMatrixDOE "0.1")
@@ -50,7 +50,8 @@ pico_enable_stdio_usb(LedMatrixDOE 1)
 
 # Add the standard library to the build
 target_link_libraries(LedMatrixDOE 
-        pico_stdlib )
+        pico_stdlib
+        m )  # Link math library for sin/cos functions
 
 # Add the standard include files to the build
 target_include_directories(LedMatrixDOE PRIVATE
